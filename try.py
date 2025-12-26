@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request, jsonify
 from groq import Groq
 from dotenv import load_dotenv
+from savedapi import GROQ_API_KEY
 load_dotenv()
 
 app = Flask(__name__)
@@ -9,7 +10,7 @@ app = Flask(__name__)
 
 # Skip the .env loading and hardcode the key directly
 # Replace 'gsk_...' with your actual key from Groq Cloud
-client = Groq(api_key="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")
+client = Groq(api_key=GROQ_API_KEY)
 
 @app.route('/')
 def index():
