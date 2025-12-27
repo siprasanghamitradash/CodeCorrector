@@ -13,13 +13,12 @@ def index():
 @app.route('/mess', methods=['POST']) #waits for the website to send a 'message' or anything
 def chat():
     user_message = request.json.get("message") #gets the message sent by the user
-    
     try:
         #asking ai for reply
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": user_message}]
-        )
+            messages=[{"role": "user", "content": user_message}] #user for human assistant for ai and system for setting rules
+        )  
         
         ai_response = completion.choices[0].message.content
         return jsonify({"response": ai_response})
