@@ -1,4 +1,3 @@
-import os
 from flask import Flask, render_template, request, jsonify
 from groq import Groq
 from savedapi import GROQ_API_KEY
