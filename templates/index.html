@@ -60,7 +60,7 @@
         chatBox.scrollTop = chatBox.scrollHeight;
 
         try {
-            const response = await fetch('/chat', { // CHANGED to /chat to match your python
+            const response = await fetch('/mess', { // CHANGED to /chat to match your python
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({message: message})
