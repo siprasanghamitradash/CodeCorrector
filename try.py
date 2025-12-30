@@ -6,55 +6,88 @@ from savedapi import GROQ_API_KEY
 
 app = Flask(__name__)
 client = Groq(api_key=GROQ_API_KEY)
+import requests # Make sure this is at the top!
 
 def get_github_summary_data(url):
-    parts = url.rstrip('/').split('/')
-    if len(parts) < 2:
+    # 1. Standardize the URL
+    clean_url = url.replace("https://", "").replace("http://", "").replace("www.", "").strip("/")
+    parts = clean_url.split("/")
+    
+    if len(parts) < 3 or parts[0] != "github.com":
         return None
     
-    user = parts[-2]
-    repo = parts[-1]
+    user = parts[1]
+    repo = parts[2]
     repo_path = f"{user}/{repo}"
     
-    # Try to find a README first
-    for filename in ["README.md", "README.txt", "readme.md"]:
-        raw_url = f"https://raw.githubusercontent.com/{repo_path}/main/{filename}"
-        response = requests.get(raw_url)
-        if response.status_code == 200:
-            return f"README Content:\n{response.text[:2000]}"
+    # Define headers so GitHub doesn't block the script
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    repo_data = {'dependencies': {}, 'description': "No description", 'files': []}
+    
+    # 1. Fetch package.json (Try main branch, then master)
+    pkg_found = False
+    for branch in ["main", "master"]:
+        pkg_url = f"https://raw.githubusercontent.com/{repo_path}/{branch}/package.json"
+        try:
+            pkg_res = requests.get(pkg_url, headers=headers, timeout=5)
+            if pkg_res.status_code == 200:
+                data = pkg_res.json()
+                repo_data['dependencies'] = data.get('dependencies', {})
+                repo_data['description'] = data.get('description', "No description")
+                pkg_found = True
+                break
+        except:
+            continue
 
-    # FALLBACK: If no README, get the list of files in the repo
-    # We use the public GitHub API for this
+    # 2. Fetch the File List (The Skeleton)
     api_url = f"https://api.github.com/repos/{repo_path}/contents/"
-    api_res = requests.get(api_url)
-    
-    if api_res.status_code == 200:
-        files = api_res.json()
-        file_names = [f['name'] for f in files]
-        return f"This repo has no README. Here is the file list: {', '.join(file_names)}"
-    
-    return None
+    try:
+        api_res = requests.get(api_url, headers=headers, timeout=5)
+        if api_res.status_code == 200:
+            repo_data['files'] = [f['name'] for f in api_res.json()]
+    except Exception as e:
+        print(f"API Error: {e}")
 
+    # 3. Handle Empty Results
+    # If we found no files AND no package.json, the repo might be private/wrong
+    if not repo_data['files'] and not pkg_found:
+        return None
+
+    return repo_data
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
 @app.route('/chat', methods=['POST'])
 def chat():
     user_message = request.json.get("message", "").strip()
     
-    # CHECK: Is this a GitHub link?
     if "github.com" in user_message.lower():
         repo_content = get_github_summary_data(user_message)
         
-        if not repo_content:
-            return jsonify({"response": "I couldn't find that repository or its README. Please check if the URL is correct and public."})
-        
-        # Craft a special prompt for the AI to summarize
-        prompt = f"Here is the README content of a GitHub repository: \n\n{repo_content}\n\n Please provide a short, 3-sentence summary of what this project does."
+        if repo_content:
+            # We extract the specific parts from the dictionary here
+            file_list = repo_content.get('files', [])
+            dependencies = list(repo_content.get('dependencies', {}).keys())
+            description = repo_content.get('description', "No description")
+
+            prompt = f"""
+            Analyze this project based on these details:
+            - Files: {file_list}
+            - Key Tech/Libraries: {dependencies}
+            - Package Description: {description}
+            
+            Tell me exactly what this app DOES. 
+            Look at the libraries (Key Tech) and file names to guess the features.
+            """
+        else:
+            return jsonify({"response": "I couldn't find that repository. Is it public?"})
     else:
         prompt = user_message
+
+    # ... rest of your try/except block stays the same
 
     try:
         completion = client.chat.completions.create(
