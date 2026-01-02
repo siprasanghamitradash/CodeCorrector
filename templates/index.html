@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeCorrector | Repo Analyst</title>
+    <title>CodeCorrector | Search</title>
     <style>
         :root {
             --bg: #0f172a;
-            --sidebar: #1e293b;
+            --card: #1e293b;
             --accent: #38bdf8;
             --text: #f8fafc;
+            --muted: #94a3b8;
         }
 
         body { 
@@ -17,113 +18,122 @@
             background-color: var(--bg); 
             color: var(--text);
             margin: 0; 
-            display: flex; 
-            height: 100vh;
-        }
-
-        /* Sidebar for Inputs */
-        .sidebar {
-            width: 300px;
-            background: var(--sidebar);
-            padding: 30px;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid #334155;
+            align-items: center;
+            min-height: 100vh;
         }
 
-        .sidebar h1 { font-size: 1.5rem; color: var(--accent); margin-bottom: 20px; }
-        .sidebar p { font-size: 0.9rem; color: #94a3b8; margin-bottom: 30px; }
-
-        /* Main Analysis Area */
-        .main-content {
-            flex: 1;
+        /* Top Search Section */
+        .search-header {
+            width: 100%;
+            padding: 60px 20px;
             display: flex;
             flex-direction: column;
-            padding: 40px;
-            overflow-y: auto;
+            align-items: center;
+            background: linear-gradient(to bottom, #1e293b, #0f172a);
+            border-bottom: 1px solid #334155;
         }
 
-        .input-group {
+        h1 { font-size: 2.5rem; color: var(--accent); margin: 0 0 10px 0; }
+        .tagline { color: var(--muted); margin-bottom: 30px; font-size: 1.1rem; }
+
+        .search-container {
+            width: 100%;
+            max-width: 700px;
             display: flex;
-            flex-direction: column;
             gap: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 8px;
+            border-radius: 14px;
+            border: 1px solid #334155;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
         input {
-            background: #0f172a;
-            border: 1px solid #334155;
-            padding: 12px;
-            border-radius: 8px;
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 15px 20px;
             color: white;
+            font-size: 1rem;
             outline: none;
         }
-
-        input:focus { border-color: var(--accent); }
 
         button {
             background: var(--accent);
             color: #0f172a;
             border: none;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 0 25px;
+            border-radius: 10px;
             font-weight: bold;
             cursor: pointer;
             transition: 0.2s;
         }
 
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:hover { background: #7dd3fc; }
 
-        /* Result Cards */
-        #results {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+        /* Results Section */
+        .main-content {
+            width: 100%;
+            max-width: 900px;
+            padding: 40px 20px;
+            box-sizing: border-box;
         }
 
         .analysis-card {
-            background: var(--sidebar);
-            border-radius: 12px;
-            padding: 25px;
+            background: var(--card);
+            border-radius: 16px;
+            padding: 40px;
             border: 1px solid #334155;
-            line-height: 1.6;
-            animation: fadeIn 0.4s ease-out;
+            line-height: 1.8;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            animation: slideUp 0.5s ease-out;
         }
 
-        .analysis-card h3 { margin-top: 0; color: var(--accent); font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* Coder style for AI text */
+        .analysis-card h3 { 
+            margin-top: 0; 
+            color: var(--accent); 
+            text-transform: uppercase; 
+            font-size: 0.9rem; 
+            letter-spacing: 2px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
         .ai-content {
             font-family: 'Fira Code', 'Courier New', monospace;
             white-space: pre-wrap;
             color: #cbd5e1;
+            font-size: 1rem;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .loading { color: var(--accent); font-style: italic; }
+        .loading { color: var(--accent); font-style: italic; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
+<div class="search-header">
     <h1>CodeCorrector</h1>
-    <p>Paste a GitHub URL below to generate a technical summary of the architecture and technology stack.</p>
+    <div class="tagline">The technical search engine for GitHub repositories.</div>
     
-    <div class="input-group">
-        <input type="text" id="user-input" placeholder="https://github.com/user/repo" onkeypress="handleKeyPress(event)">
-        <button onclick="sendMessage()">Analyze Repository</button>
+    <div class="search-container">
+        <input type="text" id="user-input" placeholder="Paste GitHub URL (e.g., https://github.com/user/repo)" onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Analyze</button>
     </div>
 </div>
 
 <div class="main-content">
     <div id="results">
         <div class="analysis-card">
-            <h3>System Status</h3>
-            <div class="ai-content">Ready for analysis. Please provide a repository link.</div>
+            <h3>System Ready</h3>
+            <div class="ai-content">Enter a repository link above to begin the architectural deep-scan.</div>
         </div>
     </div>
 </div>
@@ -140,12 +150,13 @@
         const message = input.value.trim();
         if (!message) return;
 
-        // Clear previous results and show loading
-        const tempId = "loading-" + Date.now();
+        // Show Loading State
         resultsArea.innerHTML = `
             <div class="analysis-card">
-                <h3>Analyzing:</h3>
-                <div class="ai-content loading" id="${tempId}">Scanning repository structure and dependencies...</div>
+                <div class="loading">
+                    <p>Fetching repository data...</p>
+                    <p style="font-size: 0.8rem; opacity: 0.7;">Mapping tree structure and identifying tech stack</p>
+                </div>
             </div>
         `;
 
@@ -158,12 +169,21 @@
 
             const data = await response.json();
             
-            const loadingElement = document.getElementById(tempId);
-            loadingElement.classList.remove('loading');
-            loadingElement.innerHTML = data.response;
+            // Render Result
+            resultsArea.innerHTML = `
+                <div class="analysis-card">
+                    <h3>Analysis Report: ${message.split('/').pop()}</h3>
+                    <div class="ai-content">${data.response}</div>
+                </div>
+            `;
             
         } catch (error) {
-            document.getElementById(tempId).innerText = "Error: Connection to backend failed.";
+            resultsArea.innerHTML = `
+                <div class="analysis-card">
+                    <h3 style="color: #f87171;">System Error</h3>
+                    <div class="ai-content">Failed to connect to the backend server. Please ensure the Flask app is running.</div>
+                </div>
+            `;
         }
     }
 </script>
