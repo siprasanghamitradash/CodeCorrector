@@ -7,10 +7,10 @@ app = Flask(__name__)
 client = Groq(api_key=GROQ_API_KEY)
 
 def get_github_summary_data(url):
-    # 1. Standardize and clean the URL
     clean_url = url.replace("https://", "").replace("http://", "").replace("www.", "").strip("/")
     parts = clean_url.split("/")
     if len(parts) < 3 or parts[0] != "github.com":
+        print("DEBUG: Invalid URL parts")
         return None
     
     user = parts[1]
@@ -18,21 +18,22 @@ def get_github_summary_data(url):
     repo_path = f"{user}/{repo}"
     headers = {'User-Agent': 'Mozilla/5.0'}
 
-    # 2. Recursive Tree Scan (gets every file in the project)
     files = []
     for branch in ["main", "master"]:
         api_url = f"https://api.github.com/repos/{repo_path}/git/trees/{branch}?recursive=1"
         try:
             res = requests.get(api_url, headers=headers, timeout=5)
+            print(f"DEBUG: Checking {branch} branch... Status: {res.status_code}")
             if res.status_code == 200:
                 tree = res.json().get('tree', [])
-                # Extract first 150 files to keep the AI focused
                 files = [item['path'] for item in tree if item['type'] == 'blob'][:150]
                 break
-        except:
+        except Exception as e:
+            print(f"DEBUG: Error accessing branch: {e}")
             continue
 
     if not files:
+        print("DEBUG: No files found in repo.")
         return None
         
     return {"files": files, "name": repo}
