@@ -7,28 +7,35 @@ app = Flask(__name__)
 client = Groq(api_key=GROQ_API_KEY)
 
 def get_github_summary_data(url):
-    # 1. Standardize the URL
+    # 1. Standardize and clean the URL
     clean_url = url.replace("https://", "").replace("http://", "").replace("www.", "").strip("/")
     parts = clean_url.split("/")
-    if len(parts) < 3: return None
+    if len(parts) < 3 or parts[0] != "github.com":
+        return None
     
-    repo_path = f"{parts[1]}/{parts[2]}"
+    user = parts[1]
+    repo = parts[2]
+    repo_path = f"{user}/{repo}"
     headers = {'User-Agent': 'Mozilla/5.0'}
 
-    # 2. Use the Recursive Tree API to see ALL files
-    # We first check 'main' branch, then 'master'
+    # 2. Recursive Tree Scan (gets every file in the project)
     files = []
     for branch in ["main", "master"]:
         api_url = f"https://api.github.com/repos/{repo_path}/git/trees/{branch}?recursive=1"
-        res = requests.get(api_url, headers=headers)
-        if res.status_code == 200:
-            tree = res.json().get('tree', [])
-            # Extract just the paths of the first 100 files (avoiding huge repos)
-            files = [item['path'] for item in tree if item['type'] == 'blob'][:100]
-            break
+        try:
+            res = requests.get(api_url, headers=headers, timeout=5)
+            if res.status_code == 200:
+                tree = res.json().get('tree', [])
+                # Extract first 150 files to keep the AI focused
+                files = [item['path'] for item in tree if item['type'] == 'blob'][:150]
+                break
+        except:
+            continue
 
-    if not files: return None
-    return {"files": files, "name": parts[2]}
+    if not files:
+        return None
+        
+    return {"files": files, "name": repo}
 
 @app.route('/')
 def index():
@@ -42,27 +49,29 @@ def chat():
         repo_data = get_github_summary_data(user_message)
         
         if repo_data:
-            # THE KEY CHANGE: Very strict instructions for the AI
+            # The prompt forces the AI to be a "Product Expert"
             prompt = f"""
-            Based on this file list from the '{repo_data['name']}' repository, 
-            write one simple, clear paragraph (max 4 sentences) explaining 
-            what this project is and its main features. 
-            Do not use bullet points or a long intro. Just the facts.
-
-            FILE LIST:
+            Based on the following file list from the project '{repo_data['name']}', 
+            identify what this application is and what it does for a user.
+            
+            Instruction: Write one clear, simple paragraph (max 4 sentences). 
+            Do NOT mention programming languages, file extensions, or technical stacks. 
+            Focus only on the purpose and the main features from a user's perspective.
+            
+            FILES:
             {repo_data['files']}
             """
         else:
-            return jsonify({"response": "Repository not found or private."})
+            return jsonify({"response": "I couldn't find that repository. Please check if it's public."})
     else:
+        # Fallback for general questions
         prompt = user_message
 
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                # System message sets the "behavior"
-                {"role": "system", "content": "You are a concise technical summarizer. Provide single-paragraph responses."},
+                {"role": "system", "content": "You are a product analyst. You explain software utility to non-technical users. Never mention code or tech stacks."},
                 {"role": "user", "content": prompt}
             ]
         )
