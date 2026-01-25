@@ -6,43 +6,51 @@ from savedapi import GROQ_API_KEY
 app = Flask(__name__)
 client = Groq(api_key=GROQ_API_KEY)
 
-def get_github_summary_data(url):
-    clean_url = url.replace("https://", "").replace("http://", "").replace("www.", "").strip("/")
-    parts = clean_url.split("/")
-    if len(parts) < 3 or parts[0] != "github.com":
-        print("DEBUG: Invalid URL parts")
-        return None
+def clean_github_url(url):
+    # Remove whitespace and convert to lowercase
+    url = url.strip().lower()
     
-    user = parts[1]
-    repo = parts[2]
-    repo_path = f"{user}/{repo}"
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    # Remove protocols and www.
+    url = url.replace("https://", "").replace("http://", "").replace("www.", "")
+    
+    # Split by slashes and remove empty parts (handles trailing slashes)
+    parts = [p for p in url.split('/') if p]
+    
+    # Validation: Must be github.com and have at least user and repo
+    # Example parts: ['github.com', 'octocat', 'Spoon-Knife']
+    if len(parts) >= 3 and "github.com" in parts[0]:
+        user = parts[1]
+        repo = parts[2]
+        return f"{user}/{repo}"
+    
+    return None
 
+
+def get_github_summary_data(repo_path):
+    headers = {'User-Agent': 'Mozilla/5.0'}
     files = []
+
+    # Try to get the file tree
     for branch in ["main", "master"]:
         api_url = f"https://api.github.com/repos/{repo_path}/git/trees/{branch}?recursive=1"
         try:
             res = requests.get(api_url, headers=headers, timeout=5)
-            print(f"DEBUG: Checking {branch} branch... Status: {res.status_code}")
             if res.status_code == 200:
                 tree = res.json().get('tree', [])
                 files = [item['path'] for item in tree if item['type'] == 'blob'][:150]
                 break
-        except Exception as e:
-            print(f"DEBUG: Error accessing branch: {e}")
+        except:
             continue
-
-    if not files:
-        print("DEBUG: No files found in repo.")
-        return None
-        
-    return {"files": files, "name": repo}
+    
+    return files if files else None
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/chat', methods=['POST'])
+
+
 def chat():
     user_message = request.json.get("message", "").strip()
     
