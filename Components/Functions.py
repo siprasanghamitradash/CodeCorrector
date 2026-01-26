@@ -6,7 +6,7 @@ try:
 except ImportError:
     # This works on Render (the "hidden" dashboard keys)
     GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-    GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+    GithubToken = os.environ.get("GithubToken")
 
 def clean_github_url(url):
     print(f"DEBUG: Cleaning URL: {url}")
@@ -69,7 +69,7 @@ def get_high_value_files(repo_name, file_list):
 
 def get_file_content(repo_path, file_path):
     """Step 2: Download the actual code from GitHub."""
-    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    headers = {'Authorization': f'token {GithubToken}'}
     # Try 'main' then 'master'
     for branch in ["main", "master"]:
         raw_url = f"https://raw.githubusercontent.com/{repo_path}/{branch}/{file_path}"

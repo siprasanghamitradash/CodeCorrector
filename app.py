@@ -26,18 +26,18 @@ def chat():
     repo_path = clean_github_url(user_message)
     
     if repo_path:
-        file_list = get_github_summary_data(repo_path, GithubToken) # Pass token if needed
+        file_list = get_github_summary_data(repo_path) # Pass token if needed
         if not file_list:
             return jsonify({"response": "Repository not found or private."})
 
         repo_name = repo_path.split('/')[-1]
         
         # --- NEW LOGIC: Identify and Read core files ---
-        important_files = get_high_value_files(repo_name, file_list, client)
+        important_files = get_high_value_files(repo_name, file_list)
         
         audit_data = ""
         for f_path in important_files:
-            content = get_file_content(repo_path, f_path, GithubToken)
+            content = get_file_content(repo_path, f_path)
             audit_data += f"\n--- FILE: {f_path} ---\n{content[:2500]}\n"
 
         # --- COMBINED PROMPT ---
