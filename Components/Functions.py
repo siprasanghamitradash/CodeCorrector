@@ -2,7 +2,7 @@ import os
 import requests
 try:
     # This works on your local computer
-    from savedapi import GROQ_API_KEY, GITHUB_TOKEN
+    from savedapi import GROQ_API_KEY, GithubToken
 except ImportError:
     # This works on Render (the "hidden" dashboard keys)
     GROQ_API_KEY = os.environ.get("GROQ_API_KEY")

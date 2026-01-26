@@ -5,11 +5,11 @@ from Components.Functions import *
 import os
 try:
     # This works on your local computer
-    from savedapi import GROQ_API_KEY, GITHUB_TOKEN
+    from savedapi import GROQ_API_KEY, GithubToken
 except ImportError:
     # This works on Render (the "hidden" dashboard keys)
     GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-    GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+    GithubToken = os.environ.get("GithubToken")
 
 app = Flask(__name__)
 client = Groq(api_key=GROQ_API_KEY)
@@ -26,7 +26,7 @@ def chat():
     repo_path = clean_github_url(user_message)
     
     if repo_path:
-        file_list = get_github_summary_data(repo_path, GITHUB_TOKEN) # Pass token if needed
+        file_list = get_github_summary_data(repo_path, GithubToken) # Pass token if needed
         if not file_list:
             return jsonify({"response": "Repository not found or private."})
 
@@ -37,7 +37,7 @@ def chat():
         
         audit_data = ""
         for f_path in important_files:
-            content = get_file_content(repo_path, f_path, GITHUB_TOKEN)
+            content = get_file_content(repo_path, f_path, GithubToken)
             audit_data += f"\n--- FILE: {f_path} ---\n{content[:2500]}\n"
 
         # --- COMBINED PROMPT ---
@@ -67,6 +67,7 @@ def chat():
     except Exception as e:
         return jsonify({"response": f"Error: {str(e)}"}), 500
 if __name__ == '__main__':
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    #import os
+    #port = int(os.environ.get("PORT", 5000))
+    #app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
