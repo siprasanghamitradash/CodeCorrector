@@ -1,7 +1,14 @@
 import requests
 from flask import Flask, render_template, request, jsonify
 from groq import Groq
-from savedapi import GROQ_API_KEY, GithubToken
+import os
+try:
+    # This works on your local computer
+    from savedapi import GROQ_API_KEY, GITHUB_TOKEN
+except ImportError:
+    # This works on Render (the "hidden" dashboard keys)
+    GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+    GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 
 app = Flask(__name__)
 client = Groq(api_key=GROQ_API_KEY)
@@ -104,4 +111,6 @@ def chat():
         return jsonify({"response": f"Server Error: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
