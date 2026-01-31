@@ -49,11 +49,19 @@ def get_github_summary_data(repo_path):
             continue
     
     return files if files else None
+def get_high_value_files(repo_name, file_list, client):
+    # Filter the list before sending to AI to save tokens and prevent binary junk
+    allowed_extensions = ('.py', '.js', '.html', '.css', '.java', '.cpp', '.ts', '.txt')
+    filtered_list = [f for f in file_list if f.lower().endswith(allowed_extensions)]
 
-def get_high_value_files(repo_name, file_list):
-    """Step 1: Ask AI to pick the 3 most important logic files."""
-    prompt = f"From this list of files for the project '{repo_name}', pick the 3 most important files that contain the core logic or main functionality. Ignore configs/images. Return ONLY the paths separated by commas.\nFILES:\n{file_list}"
+    prompt = f"""
+    From this list of SOURCE CODE files for '{repo_name}', pick the 3 most important files that contain logic.
+    IGNORE all images, binaries, and icons.
+    Return ONLY the paths separated by commas.
     
+    FILES: {filtered_list}
+    """
+    # ... rest of the function remains the same
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",

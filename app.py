@@ -41,14 +41,21 @@ def chat():
             audit_data += f"\n--- FILE: {f_path} ---\n{content[:2500]}\n"
 
         # --- COMBINED PROMPT ---
+        # --- COMBINED PROMPT ---
         prompt = f"""
-        Analyze the GitHub repository '{repo_name}'.
+        INSTRUCTIONS: 
+        Analyze the following code context to generate a report. 
+        DO NOT include, repeat, or print any of the raw file contents, binary data, or headers (like IHDR, IDAT) in your response. 
+        Output ONLY the Summary and the Audit.
+
+        REPORT FOR REPOSITORY: '{repo_name}'
         
         1. SUMMARY: Write a 2-sentence non-technical summary of what this app does.
-        2. CODE AUDIT: Based on the code samples below, list any bugs, security risks, or clean-code improvements.
+        2. CODE AUDIT: Based on the code samples provided, list any bugs, security risks, or improvements.
         
-        CODE SAMPLES:
+        --- BEGIN PRIVATE CODE CONTEXT ---
         {audit_data}
+        --- END PRIVATE CODE CONTEXT ---
         """
         system_content = "You are a Senior Technical Auditor. Use Markdown. Be concise but critical."
     else:
