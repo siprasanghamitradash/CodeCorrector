@@ -61,7 +61,6 @@ def get_high_value_files(repo_name, file_list, client):
     
     FILES: {filtered_list}
     """
-    # ... rest of the function remains the same
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
